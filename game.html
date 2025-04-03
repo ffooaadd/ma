@@ -3,102 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الحرب القوية</title>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        canvas { display: block; background-color: #2d2d2d; }
-    </style>
+    <title>لعبة واقعية ثلاثية الأبعاد</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
-    <canvas id="gameCanvas"></canvas>
+<body style="margin: 0; overflow: hidden;">
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        // تعريف اللاعب
-        const player = {
-            x: canvas.width / 2,
-            y: canvas.height - 100,
-            width: 50,
-            height: 50,
-            color: 'blue',
-            speed: 5,
-            dx: 0,
-            dy: 0
-        };
-
-        // تعريف الأعداء
-        const enemies = [];
-        const enemySpeed = 2;
-
-        // إضافة الأعداء
-        function createEnemy() {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height / 2;
-            enemies.push({
-                x, y, width: 50, height: 50, color: 'red', dx: enemySpeed, dy: enemySpeed
-            });
-        }
-
-        // التحكم في اللاعب
-        function movePlayer() {
-            player.x += player.dx;
-            player.y += player.dy;
-        }
-
-        // رسم اللاعب
-        function drawPlayer() {
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-        }
-
-        // رسم الأعداء
-        function drawEnemies() {
-            enemies.forEach(enemy => {
-                ctx.fillStyle = enemy.color;
-                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-            });
-        }
-
-        // حركة الأعداء (ذكاء اصطناعي بسيط)
-        function moveEnemies() {
-            enemies.forEach(enemy => {
-                enemy.x += enemy.dx;
-                enemy.y += enemy.dy;
-                if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.dx = -enemy.dx;
-                if (enemy.y <= 0 || enemy.y >= canvas.height - enemy.height) enemy.dy = -enemy.dy;
-            });
-        }
-
+        // إنشاء مشهد (Scene)
+        const scene = new THREE.Scene();
+        
+        // إعداد الكاميرا
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // إعداد المحرك (Renderer)
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        
+        // إضافة إضاءة للمشهد
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        
+        // إنشاء مكعب بسيط ككائن قابل للحركة
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+        const player = new THREE.Mesh(geometry, material);
+        scene.add(player);
+        
+        // إعداد الحركة
+        camera.position.z = 5;
+        
         // التعامل مع لوحة المفاتيح
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp') player.dy = -player.speed;
-            if (e.key === 'ArrowDown') player.dy = player.speed;
-            if (e.key === 'ArrowLeft') player.dx = -player.speed;
-            if (e.key === 'ArrowRight') player.dx = player.speed;
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowUp') moveForward = true;
+            if (event.key === 'ArrowDown') moveBackward = true;
+            if (event.key === 'ArrowLeft') moveLeft = true;
+            if (event.key === 'ArrowRight') moveRight = true;
         });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        
+        document.addEventListener('keyup', (event) => {
+            if (event.key === 'ArrowUp') moveForward = false;
+            if (event.key === 'ArrowDown') moveBackward = false;
+            if (event.key === 'ArrowLeft') moveLeft = false;
+            if (event.key === 'ArrowRight') moveRight = false;
         });
-
+        
         // تحديث اللعبة
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            movePlayer();
-            moveEnemies();
-            drawPlayer();
-            drawEnemies();
-            requestAnimationFrame(gameLoop);
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (moveForward) player.position.z -= 0.1;
+            if (moveBackward) player.position.z += 0.1;
+            if (moveLeft) player.position.x -= 0.1;
+            if (moveRight) player.position.x += 0.1;
+            
+            renderer.render(scene, camera);
         }
-
-        // إنشاء الأعداء بشكل عشوائي
-        setInterval(createEnemy, 2000); // كل 2 ثانية يضاف عدو جديد
-
-        gameLoop();
+        
+        animate();
     </script>
 </body>
 </html>
