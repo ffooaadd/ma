@@ -3,102 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة حرب بسيطة</title>
+    <title>لعبة الحرب القوية</title>
     <style>
-        body {
-            text-align: center;
-            background-color: #222;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-        #gameArea {
-            width: 400px;
-            height: 300px;
-            background-color: lightgray;
-            position: relative;
-            margin: auto;
-            overflow: hidden;
-            border: 2px solid black;
-        }
-        #player {
-            width: 40px;
-            height: 40px;
-            background-color: blue;
-            position: absolute;
-            bottom: 10px;
-            left: 180px;
-        }
-        .bullet {
-            width: 10px;
-            height: 5px;
-            background-color: red;
-            position: absolute;
-        }
-        #controls {
-            margin-top: 10px;
-        }
-        button {
-            font-size: 20px;
-            padding: 10px;
-            margin: 5px;
-        }
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; background-color: #2d2d2d; }
     </style>
 </head>
 <body>
-
-    <h1>لعبة حرب - M4</h1>
-    <div id="gameArea">
-        <div id="player"></div>
-    </div>
-    
-    <div id="controls">
-        <button onclick="moveLeft()">⬅️</button>
-        <button onclick="shoot()">🔫</button>
-        <button onclick="moveRight()">➡️</button>
-    </div>
-
-    <audio id="gunSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-
+    <canvas id="gameCanvas"></canvas>
     <script>
-        let player = document.getElementById("player");
-        let gunSound = document.getElementById("gunSound");
-        let gameArea = document.getElementById("gameArea");
-        let playerX = 180;
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-        function moveLeft() {
-            if (playerX > 0) {
-                playerX -= 20;
-                player.style.left = playerX + "px";
-            }
+        // تعريف اللاعب
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 100,
+            width: 50,
+            height: 50,
+            color: 'blue',
+            speed: 5,
+            dx: 0,
+            dy: 0
+        };
+
+        // تعريف الأعداء
+        const enemies = [];
+        const enemySpeed = 2;
+
+        // إضافة الأعداء
+        function createEnemy() {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height / 2;
+            enemies.push({
+                x, y, width: 50, height: 50, color: 'red', dx: enemySpeed, dy: enemySpeed
+            });
         }
 
-        function moveRight() {
-            if (playerX < 360) {
-                playerX += 20;
-                player.style.left = playerX + "px";
-            }
+        // التحكم في اللاعب
+        function movePlayer() {
+            player.x += player.dx;
+            player.y += player.dy;
         }
 
-        function shoot() {
-            let bullet = document.createElement("div");
-            bullet.classList.add("bullet");
-            bullet.style.left = (playerX + 15) + "px";
-            bullet.style.bottom = "50px";
-            gameArea.appendChild(bullet);
-
-            let bulletInterval = setInterval(() => {
-                let bulletBottom = parseInt(bullet.style.bottom);
-                if (bulletBottom > 290) {
-                    clearInterval(bulletInterval);
-                    bullet.remove();
-                } else {
-                    bullet.style.bottom = bulletBottom + 10 + "px";
-                }
-            }, 50);
-
-            gunSound.play();
+        // رسم اللاعب
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
         }
+
+        // رسم الأعداء
+        function drawEnemies() {
+            enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.color;
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            });
+        }
+
+        // حركة الأعداء (ذكاء اصطناعي بسيط)
+        function moveEnemies() {
+            enemies.forEach(enemy => {
+                enemy.x += enemy.dx;
+                enemy.y += enemy.dy;
+                if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) enemy.dx = -enemy.dx;
+                if (enemy.y <= 0 || enemy.y >= canvas.height - enemy.height) enemy.dy = -enemy.dy;
+            });
+        }
+
+        // التعامل مع لوحة المفاتيح
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') player.dy = -player.speed;
+            if (e.key === 'ArrowDown') player.dy = player.speed;
+            if (e.key === 'ArrowLeft') player.dx = -player.speed;
+            if (e.key === 'ArrowRight') player.dx = player.speed;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') player.dy = 0;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        });
+
+        // تحديث اللعبة
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            movePlayer();
+            moveEnemies();
+            drawPlayer();
+            drawEnemies();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // إنشاء الأعداء بشكل عشوائي
+        setInterval(createEnemy, 2000); // كل 2 ثانية يضاف عدو جديد
+
+        gameLoop();
     </script>
-
 </body>
 </html>
